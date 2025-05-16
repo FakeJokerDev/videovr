@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il calcolo del relax</title>
+    <style>
+        body { margin: 0; }
+        #vr-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #vr-button, #exit-vr-button {
+            position: absolute;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #vr-button {
+            right: 20px;
+        }
+        #exit-vr-button {
+            left: 20px;
+            display: none; /* Nascosto inizialmente */
+        }
+        #mini-video {
+            position: absolute;
+            top: 100px;
+            right: 30px; /* Posizionato lateralmente a destra */
+            width: 600px; /* Grande ma riavvicinato */
+            height: 338px; /* Grande ma riavvicinato */
+            background-color: black;
+            z-index: 10;
+            display: none; /* Nascosto inizialmente */
+        }
+    </style>
+</head>
+<body>
+    <div id="vr-container">
+        <video id="video-vr" controls autoplay loop>
+            <source src="video_vr.mp4" type="video/mp4">
+            Il tuo browser non supporta il video.
+        </video>
+        <button id="vr-button">Visualizza in VR</button>
+        <button id="exit-vr-button">Esci da VR</button>
+
+        <!-- Finestra video in miniatura, visibile solo in VR -->
+        <div id="mini-video">
+            <video id="mini-video-player" autoplay loop>
+                <source src="video_vr.mp4" type="video/mp4">
+                Il tuo browser non supporta il video.
+            </video>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.2.0/dist/aframe.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scene = document.createElement('a-scene');
+            scene.setAttribute('embedded', 'true');
+            scene.setAttribute('vr-mode-ui', 'enabled');
+            document.body.appendChild(scene);
+
+            const video = document.getElementById('video-vr');
+            video.playbackRate = 0.15; // Velocità principale del video al 15% della velocità normale
+
+            const texture = new THREE.VideoTexture(video);
+
+            // Creazione del cielo come sfera (per avere l'ambiente visibile)
+            const sky = document.createElement('a-sky');
+            sky.setAttribute('src', '#video-vr');  // Usa il video come texture
+            scene.appendChild(sky);
+
+            // Posiziona il video principale molto lontano dalla fotocamera
+            const videoEntity = document.createElement('a-entity');
+            videoEntity.setAttribute('geometry', 'primitive: plane; width: 16; height: 9');
+            videoEntity.setAttribute('material', 'src: #video-vr');
+            videoEntity.setAttribute('position', '0 1.5 -20'); // Posiziona il video lontano dalla fotocamera (fuori dalla struttura)
+            scene.appendChild(videoEntity);
+
+            // Aggiungi una fotocamera a una distanza maggiore (4 volte più lontana)
+            const camera = document.createElement('a-camera');
+            camera.setAttribute('position', '0 1.6 10000'); // Fotocamera a distanza molto maggiore
+            scene.appendChild(camera);
+
+            // Pulsante per entrare in modalità VR
+            const vrButton = document.getElementById('vr-button');
+            vrButton.addEventListener('click', () => {
+                scene.enterVR();
+                document.getElementById('mini-video').style.display = 'block'; // Mostra il mini-video
+                vrButton.style.display = 'none'; // Nascondi il pulsante "Visualizza in VR"
+                document.getElementById('exit-vr-button').style.display = 'block'; // Mostra il pulsante "Esci da VR"
+            });
+
+            // Pulsante per uscire dalla modalità VR
+            const exitVrButton = document.getElementById('exit-vr-button');
+            exitVrButton.addEventListener('click', () => {
+                scene.exitVR();
+                document.getElementById('mini-video').style.display = 'none'; // Nascondi il mini-video
+                vrButton.style.display = 'block'; // Mostra il pulsante "Visualizza in VR"
+                exitVrButton.style.display = 'none'; // Nascondi il pulsante "Esci da VR"
+            });
+
+            // Velocizza il video nello specchietto
+            const miniVideo = document.getElementById('mini-video-player');
+            miniVideo.playbackRate = 0.40; // Imposta la velocità del video in miniatura al 40% della velocità normale
+        });
+    </script>
+</body>
+</html>
